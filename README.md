@@ -1,3 +1,7 @@
+<a id="english"></a>
+
+**English** | [한국어](#korean)
+
 # Live Voice Assistant (Live Streaming)
 
 **live-voice-assistant** is an intelligent real-time voice assistant project for the Raspberry Pi.
@@ -154,6 +158,10 @@ journalctl -u live-voice-assistant.service -f
 
 ---
 ---
+
+<a id="korean"></a>
+
+[English](#english) | **한국어**
 
 # Live Voice Assistant (Live Streaming)
 
