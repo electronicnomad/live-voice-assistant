@@ -86,7 +86,7 @@ Follow these steps to make it start automatically when the Raspberry Pi boots.
 ### 1. Create the Service File
 
 ```bash
-sudo nano /etc/systemd/system/live-voice-assistant.service
+sudo vi /etc/systemd/system/live-voice-assistant.service
 ```
 
 ### 2. Enter the Contents (account and paths need editing)
@@ -243,7 +243,7 @@ python live-voice-assistant.py
 ### 1. 서비스 파일 생성
 
 ```bash
-sudo nano /etc/systemd/system/live-voice-assistant.service
+sudo vi /etc/systemd/system/live-voice-assistant.service
 ```
 
 ### 2. 내용 입력 (사용자 계정 및 경로 수정 필요)
