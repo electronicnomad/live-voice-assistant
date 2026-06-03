@@ -1,0 +1,3 @@
+# live-voice-assistant runtime dependencies
+google-genai
+pyaudio
