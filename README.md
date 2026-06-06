@@ -157,6 +157,53 @@ journalctl -u live-voice-assistant.service -f
 * `venv/`: Isolated space for Python packages.
 
 ---
+
+## Raspberry Pi Setup
+
+### Hardware
+
+The following hardware was used in this project.
+
+* [Raspberry Pi 4 Model B Rev 1.2](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) 4GB
+* [Aluminum heavy-duty heatsink housing case enclosure](https://www.coupang.com/vp/products/8635018291?sourceType=Wish&vendorItemId=88856279351)
+* [Joytron wired professional pin microphone, USB type](https://www.coupang.com/vp/products/8266944825?sourceType=Wish&vendorItemId=82838943493)
+* [Portable USB speaker](https://www.coupang.com/vp/products/1606481616?sourceType=Wish&vendorItemId=78328116556)
+* [LEGO DUPLO](www.lego.com/themes/duplo)
+
+![Raspberry Pi](./raspi.jpg)
+
+### Software
+
+There isn't much software worth introducing other than the operating system. It runs Ubuntu.
+
+#### Operating System
+
+```bash
+$ cat /etc/lsb-release 
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=24.04
+DISTRIB_CODENAME=noble
+DISTRIB_DESCRIPTION="Ubuntu 24.04.4 LTS"
+```
+
+```bash
+$ cat /etc/os-release 
+PRETTY_NAME="Ubuntu 24.04.4 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.4 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+```
+
+---
 ---
 
 <a id="korean"></a>
@@ -316,3 +363,50 @@ journalctl -u live-voice-assistant.service -f
 * `list-models.py`: 사용 가능한 Gemini 모델 목록을 조회하는 유틸리티.
 * `probe-audio.py`: 오디오 입출력 장치를 탐색하는 유틸리티.
 * `venv/`: 파이썬 패키지 독립 공간.
+
+---
+
+## 라즈베리파이 구성
+
+### 하드웨어
+
+본 프로젝트에 다음의 하드웨어가 사용되었습니다.
+
+* [Raspberry Pi 4 Model B Rev 1.2](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) 4GB
+* [알루미늄 헤비 듀티 방열판 하우징 케이스 인클로저](https://www.coupang.com/vp/products/8635018291?sourceType=Wish&vendorItemId=88856279351)
+* [조이트론 유선 프로페셔널 핀마이크 USB 타입](https://www.coupang.com/vp/products/8266944825?sourceType=Wish&vendorItemId=82838943493)
+* [휴대형 USB 스피커](https://www.coupang.com/vp/products/1606481616?sourceType=Wish&vendorItemId=78328116556)
+* [레고 듀플로](www.lego.com/themes/duplo)
+
+![Raspberry Pi](./raspi.jpg)
+
+### 소프트웨어
+
+소프트웨라고 하기엔 소개할 만한 게 운영체제 밖에 없군요. Ubuntu를 사용하고 있습니다.
+
+#### 운영체제
+
+```bash
+$ cat /etc/lsb-release 
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=24.04
+DISTRIB_CODENAME=noble
+DISTRIB_DESCRIPTION="Ubuntu 24.04.4 LTS"
+```
+
+```bash
+$ cat /etc/os-release 
+PRETTY_NAME="Ubuntu 24.04.4 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.4 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+```
