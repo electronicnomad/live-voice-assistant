@@ -5,7 +5,7 @@
 # Live Voice Assistant (Live Streaming)
 
 **live-voice-assistant** is an intelligent real-time voice assistant project for the Raspberry Pi.
-By applying the latest **Gemini Multimodal Live API**, it supports **seamless and natural full-duplex real-time conversation**, just like talking to a person.
+By applying the latest **Gemini Live API**, it supports **seamless and natural full-duplex real-time conversation**, just like talking to a person.
 
 ---
 
@@ -213,11 +213,11 @@ LOGO=ubuntu-logo
 # Live Voice Assistant (Live Streaming)
 
 **live-voice-assistant**는 라즈베리 파이를 위한 지능형 실시간 음성 비서 프로젝트입니다.  
-가장 최신의 **Gemini Multimodal Live API**를 적용하여, 사람과 대화하듯 **끊김 없고 자연스러운 양방향(Full-Duplex) 실시간 대화**를 지원합니다.
+가장 최신의 **Gemini Live API**를 적용하여, 사람과 대화하듯 **끊김 없고 자연스러운 양방향(Full-Duplex) 실시간 대화**를 지원합니다.
 
 ---
 
-## 혁신적인 주요 기능
+## 주요 기능
 
 * **즉시 대화 모드:** 실행과 동시에 마이크 입력을 받아 바로 실시간 대화를 시작합니다.
 * **진정한 실시간 스트리밍 (Websocket):** 마이크 소리를 작은 조각(Chunk) 단위로 쪼개어 서버로 즉시 전송하고, 인공지능의 답변도 실시간으로 스피커로 출력합니다.
@@ -272,7 +272,7 @@ python live-voice-assistant.py
 
 ---
 
-## 음성(목소리) 변경
+## 음성 변경
 
 비서가 대답할 때 사용하는 목소리는 변경할 수 있습니다. `live-voice-assistant.py` 파일의 `config` 안 `voice_name` 값을 원하는 음성 이름으로 바꾸면 됩니다. (기본값: `Despina`)
 
