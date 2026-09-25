@@ -99,7 +99,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Live API 모델
 # Live API model
-MODEL_ID = "gemini-3.1-flash-live-preview"
+MODEL_ID = "gemini-3.8-live"
 
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stderr.reconfigure(encoding='utf-8')
@@ -117,6 +117,12 @@ CHANNELS = 1
 GEMINI_INPUT_RATE = 16000   # 마이크 → Gemini / Microphone → Gemini
 GEMINI_OUTPUT_RATE = 24000  # Gemini → 스피커 / Gemini → Speaker
 GEMINI_RATE = GEMINI_INPUT_RATE  # 하위 호환용 / For backward compatibility
+
+# 인터럽트(Barge-in) 설정
+# 스피커 출력 중 사용자 발화 감지 RMS 임계값 (환경에 따라 .env에서 조정 가능)
+# Interrupt (Barge-in) settings: RMS threshold to detect user speech while speaker is playing
+INTERRUPT_RMS_THRESHOLD = int(os.getenv("INTERRUPT_RMS_THRESHOLD", "1800"))
+INTERRUPT_FRAME_COUNT = 2  # 40ms * 2 = 80ms 연속 감지 시 인터럽트 발동
 
 # ==========================================
 # [2] 하드웨어 탐색 및 PyAudio 인덱스/샘플 레이트 매핑
@@ -246,15 +252,28 @@ async def run_forever():
     app_state = {
         "running": True,         # 전체 프로그램 실행 상태 / Overall program running state
         "is_playing": False,     # 스피커 출력 상태 / Speaker output state
+        "interrupted": False,    # 인터럽트 발생 상태 / Interrupted state
     }
 
     def speaker_worker():
         """스피커 재생 및 리샘플링 전담 스레드 / Dedicated thread for speaker playback and resampling"""
         out_state = None
         while app_state["running"]:
+            if app_state["interrupted"]:
+                while not speaker_queue.empty():
+                    try: speaker_queue.get_nowait()
+                    except: break
+                app_state["is_playing"] = False
+                app_state["interrupted"] = False
+                out_state = None
+                time.sleep(0.02)
+                continue
+
             try:
-                audio_data = speaker_queue.get(timeout=0.1)
+                audio_data = speaker_queue.get(timeout=0.05)
                 if audio_data:
+                    if app_state["interrupted"]:
+                        continue
                     app_state["is_playing"] = True
                     if SPEAKER_RATE != GEMINI_OUTPUT_RATE:
                         audio_data, out_state = audioop.ratecv(audio_data, 2, CHANNELS, GEMINI_OUTPUT_RATE, SPEAKER_RATE, out_state)
@@ -278,15 +297,11 @@ async def run_forever():
         """마이크 캡처 및 리샘플링 전담 스레드 / Dedicated thread for microphone capture and resampling"""
         in_state = None
         last_log_time = 0
+        interrupt_counter = 0
 
         while app_state["running"]:
             try:
                 data = mic_stream.read(CHUNK, exception_on_overflow=False)
-
-                # 에코 캔슬링: 스피커 재생 중일 땐 마이크 캡처 무시
-                # Echo cancellation: ignore mic capture while the speaker is playing
-                if app_state["is_playing"]:
-                    data = b'\x00' * len(data)
 
                 # 리샘플링 (Mic Rate -> Gemini Rate 16000Hz)
                 # Resampling (Mic Rate -> Gemini Rate 16000Hz)
@@ -295,19 +310,52 @@ async def run_forever():
                 else:
                     resampled_data = data
 
-                # Gemini 대화 모드: 서버 전송 큐에 데이터 넣기
-                # Gemini conversation mode: put data into the server send queue
                 rms = audioop.rms(resampled_data, 2)
-                if rms > 1500: # 대화 감지 임계값 / Speech detection threshold
-                    curr = time.time()
-                    if curr - last_log_time > 1.0:
-                        log.debug(f"[MIC] 사용자 음성 감지 (RMS: {rms})")
-                        last_log_time = curr
+
+                # 스피커가 출력 중일 때 (AI가 말하는 도중)
+                # While the speaker is playing (AI speaking)
+                if app_state["is_playing"]:
+                    if rms >= INTERRUPT_RMS_THRESHOLD:
+                        interrupt_counter += 1
+                        if interrupt_counter >= INTERRUPT_FRAME_COUNT:
+                            # 사용자 발화 감지로 AI 발화 즉시 중단 (Barge-in 인터럽트 발동)
+                            # User speech detected: stop AI speech immediately (Barge-in trigger)
+                            app_state["interrupted"] = True
+                            app_state["is_playing"] = False
+                            while not speaker_queue.empty():
+                                try: speaker_queue.get_nowait()
+                                except: break
+
+                            curr = time.time()
+                            if curr - last_log_time > 0.5:
+                                log.info(f"[INTERRUPT] 사용자 발화 감지 (RMS: {rms}) -> AI 발화 중단 및 경청 모드 전환")
+                                last_log_time = curr
+
+                            send_data = resampled_data
+                        else:
+                            # 인터럽트 판정 대기 중 스피커 누음 에코 억제
+                            # Suppress speaker bleed-through while evaluating interrupt
+                            send_data = b'\x00' * len(resampled_data)
+                    else:
+                        interrupt_counter = 0
+                        # 스피커 누음 에코 억제: 묵음 전송
+                        # Suppress echo: send silence
+                        send_data = b'\x00' * len(resampled_data)
+                else:
+                    # 평상시 (AI가 말하지 않을 때): 마이크 입력 정상 전송
+                    # Normal mode: stream mic input to Gemini
+                    interrupt_counter = 0
+                    send_data = resampled_data
+                    if rms > 1500:
+                        curr = time.time()
+                        if curr - last_log_time > 1.0:
+                            log.debug(f"[MIC] 사용자 음성 감지 (RMS: {rms})")
+                            last_log_time = curr
 
                 try:
                     loop.call_soon_threadsafe(
                         lambda d: send_queue.put_nowait(d) if not send_queue.full() else None,
-                        resampled_data
+                        send_data
                     )
                 except:
                     pass
@@ -325,9 +373,10 @@ async def run_forever():
     mic_thread.start()
 
     config = {
-        "system_instruction": {"parts": [{"text": "You are a helpful AI assistant. Respond directly and concisely. Always respond in the same language the user speaks. Default to English if the language is unclear."}]},
+        "system_instruction": {"parts": [{"text": "You are a helpful AI assistant. Respond directly and concisely. Always respond in the same language the user speaks. Default to English if the language is unclear. Use Google Search to look up real-time facts, current news, weather, schedules, stock prices, and up-to-date information when asked."}]},
         "response_modalities": ["AUDIO"],
         "speech_config": {"voice_config": {"prebuilt_voice_config": {"voice_name": "Despina"}}},
+        "tools": [{"google_search": {}}],
         "context_window_compression": {
             "trigger_tokens": 800000,
             "sliding_window": {"target_tokens": 10000}
@@ -366,6 +415,7 @@ async def run_forever():
 
                     async def receive_task():
                         audio_chunk_count = 0
+                        current_transcription = []
                         while app_state["running"]:
                             try:
                                 async for message in session.receive():
@@ -379,12 +429,37 @@ async def run_forever():
                                     server_content = message.server_content
                                     if server_content is not None:
                                         if server_content.interrupted:
-                                            log.info("[RECV] Interrupted: 봇 응답 중단")
+                                            log.info("[RECV] Interrupted: 봇 응답 중단 (서버 통보)")
+                                            app_state["interrupted"] = True
+                                            app_state["is_playing"] = False
+                                            current_transcription.clear()
                                             while not speaker_queue.empty():
                                                 try: speaker_queue.get_nowait()
                                                 except: break
 
+                                        # 실시간 웹 검색(Grounding) 메타데이터 감지 및 로깅
+                                        # Detect and log real-time web search (Grounding) metadata
+                                        grounding_meta = getattr(server_content, "grounding_metadata", None)
+                                        if grounding_meta:
+                                            queries = getattr(grounding_meta, "web_search_queries", None)
+                                            if queries:
+                                                query_str = ", ".join(queries)
+                                                log.info(f"[Web Search] 실시간 검색 실행: {query_str}")
+                                                print(f"\n[Web Search] 실시간 검색 중: {query_str}")
+
+                                        # 실시간 음성 자막(Output Transcription) 누적
+                                        # Accumulate real-time voice response transcription
+                                        output_trans = getattr(server_content, "output_transcription", None)
+                                        if output_trans and getattr(output_trans, "text", None):
+                                            current_transcription.append(output_trans.text)
+
                                         if server_content.turn_complete:
+                                            if current_transcription:
+                                                full_text = "".join(current_transcription).strip()
+                                                if full_text:
+                                                    log.info(f"Bot: {full_text}")
+                                                    print(f"\nBot: {full_text}")
+                                                current_transcription.clear()
                                             audio_chunk_count = 0
 
                                         model_turn = server_content.model_turn
