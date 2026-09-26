@@ -11,12 +11,13 @@ By applying the latest **Gemini Live API**, it supports **seamless and natural f
 
 ## Key Features
 
-* **Instant Conversation Mode:** Starts receiving microphone input and begins real-time conversation the moment it launches.
+* **Instant Conversation Mode:** Starts receiving microphone input and begins real-time conversation the moment it launches using the latest `gemini-3.8-live` model.
 * **True Real-Time Streaming (Websocket):** Splits the microphone audio into small chunks and sends them to the server immediately, while the AI's responses are played through the speaker in real time.
-* **Human-Like Conversation Flow (Interruption Support):** If the user starts speaking while the AI is talking, it **immediately stops speaking and listens to the user's new input**.
+* **Real-Time Web Search (Google Search Grounding):** When asked about current news, weather, schedules, stock prices, or live facts, the AI automatically executes Google Search to retrieve up-to-date information and answers via voice.
+* **Human-Like Conversation Flow (Barge-in Interruption Support):** If the user speaks while the AI is talking, the assistant instantly detects voice activity via RMS threshold, **immediately stops playback, and switches to listening mode**.
 * **Pure Multimodal Audio:** It understands the audio data itself and replies directly with audio, without any text conversion (STT/TTS), so intonation and emotional expression are far richer and more natural.
 * **Session Stability & Optimization:** Optimized queue management and automatic reconnection logic support long, uninterrupted, comfortable conversations.
-* **Detailed Logging System:** The AI's response text and the microphone input status (RMS) are automatically saved to the `logs/` directory, making it easy to preserve conversation records and diagnose issues.
+* **Detailed Logging & Live Transcription:** Real-time subtitles (`output_transcription`) of the AI's speech, Google search queries, and microphone input status (RMS) are displayed in the console and saved to `logs/`.
 
 ---
 
@@ -41,12 +42,16 @@ pip install -r requirements.txt
 # (or install directly: pip install google-genai pyaudio)
 ```
 
-### 3. Configure the API Key (Important)
-
-Create a `.env` file in the project root directory and enter a Gemini API key that supports the Live API.
-
+### 3. Configure Environment Variables (.env)
+ 
+Create a `.env` file in the project root directory and enter your Gemini API key and optional settings.
+ 
 ```text
 GEMINI_API_KEY=your_actual_api_key_here
+
+# (Optional) RMS threshold for user barge-in interruption while the speaker is playing (Default: 1800)
+# Adjust based on your microphone sensitivity and speaker volume
+INTERRUPT_RMS_THRESHOLD=1800
 ```
 
 ---
@@ -219,12 +224,13 @@ LOGO=ubuntu-logo
 
 ## 주요 기능
 
-* **즉시 대화 모드:** 실행과 동시에 마이크 입력을 받아 바로 실시간 대화를 시작합니다.
+* **즉시 대화 모드:** 실행과 동시에 마이크 입력을 받아 최신 `gemini-3.8-live` 모델 기반으로 바로 실시간 대화를 시작합니다.
 * **진정한 실시간 스트리밍 (Websocket):** 마이크 소리를 작은 조각(Chunk) 단위로 쪼개어 서버로 즉시 전송하고, 인공지능의 답변도 실시간으로 스피커로 출력합니다.
-* **사람 같은 대화 흐름 (Interruption 지원):** 인공지능이 말하고 있는 도중에도 사용자가 말을 시작하면, **즉시 말하기를 멈추고 사용자의 새로운 말을 경청**합니다.
+* **실시간 인터넷 검색 (Google Search Grounding):** 최신 뉴스, 날씨, 일정, 주가 등 실시간 정보 질의 시 Google Search를 자동으로 실행하여 최신 팩트를 취득하고 음성으로 답변합니다.
+* **사람 같은 대화 흐름 (Barge-in 인터럽트 지원):** 인공지능이 말하고 있는 도중에도 사용자가 말을 시작하면 음량(RMS) 분석을 통해 **즉시 말하기를 멈추고 사용자의 새로운 말을 경청**합니다.
 * **순수 멀티모달 오디오:** 텍스트 변환(STT/TTS) 과정 없이 오디오 데이터 그 자체를 이해하고 오디오로 직접 답변하므로, 억양과 감정 표현이 훨씬 풍부하고 자연스럽습니다.
 * **세션 안정성 및 최적화:** 최적화된 큐(Queue) 관리와 자동 재연결 로직을 통해 장시간 끊김 없는 쾌적한 대화를 지원합니다.
-* **상세 로깅 시스템:** 인공지능의 답변 텍스트와 마이크 입력 상태(RMS)를 `logs/` 디렉토리에 자동 저장하여 대화 기록 보존 및 문제 확인이 용이합니다.
+* **상세 로깅 및 실시간 자막 시스템:** 인공지능의 실시간 음성 자막(`output_transcription`), 웹 검색 쿼리, 마이크 입력 상태(RMS)를 터미널 화면과 `logs/` 디렉토리에 실시간으로 기록합니다.
 
 ---
 
@@ -249,12 +255,16 @@ pip install -r requirements.txt
 # (또는 직접 설치: pip install google-genai pyaudio)
 ```
 
-### 3. API 키 설정 (중요)
+### 3. 환경 변수 설정 (.env)
 
-프로젝트 루트 디렉토리에 `.env` 파일을 만들고, Live API를 지원하는 Gemini API 키를 입력합니다.
+프로젝트 루트 디렉토리에 `.env` 파일을 만들고, Live API를 지원하는 Gemini API 키 및 옵션 설정을 입력합니다.
 
 ```text
 GEMINI_API_KEY=your_actual_api_key_here
+
+# (선택 사항) AI 스피커 출력 중 사용자 끼어들기(Barge-in) 감지 RMS 임계값 (기본값: 1800)
+# check-vol.py 실행 결과 및 마이크 감도/스피커 음량에 맞게 조정 가능
+INTERRUPT_RMS_THRESHOLD=1800
 ```
 
 ---

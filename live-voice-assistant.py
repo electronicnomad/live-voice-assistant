@@ -375,7 +375,7 @@ async def run_forever():
     config = {
         "system_instruction": {"parts": [{"text": "You are a helpful AI assistant. Respond directly and concisely. Always respond in the same language the user speaks. Default to English if the language is unclear. Use Google Search to look up real-time facts, current news, weather, schedules, stock prices, and up-to-date information when asked."}]},
         "response_modalities": ["AUDIO"],
-        "speech_config": {"voice_config": {"prebuilt_voice_config": {"voice_name": "Despina"}}},
+        "speech_config": {"voice_config": {"prebuilt_voice_config": {"voice_name": "Sulafat"}}},
         "tools": [{"google_search": {}}],
         "context_window_compression": {
             "trigger_tokens": 800000,
